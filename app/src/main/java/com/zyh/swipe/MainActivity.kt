@@ -37,5 +37,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         adapter.setNewInstance(list)
+
+
+
     }
 }
