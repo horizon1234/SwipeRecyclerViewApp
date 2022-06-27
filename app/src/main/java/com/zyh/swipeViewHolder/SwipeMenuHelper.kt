@@ -51,6 +51,7 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback) :
     val mOnItemTouchListener = object : RecyclerView.OnItemTouchListener {
 
         override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {
+            Log.i(TAG, "onTouchEvent: $e")
             if (_needHandleTouch) {
                 gestureDetectorCompat?.onTouchEvent(e)
             }
@@ -71,7 +72,9 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback) :
                     Log.i(TAG, "onInterceptTouchEvent: $e")
                     if (_needHandleTouch) {
                         Log.i(TAG, "onInterceptTouchEvent: 需要继续处理")
-                        gestureDetectorCompat?.onTouchEvent(e)
+                        val moveConsume = gestureDetectorCompat?.onTouchEvent(e)
+                        Log.i(TAG, "onInterceptTouchEvent: 需要继续处理 $moveConsume")
+                        moveConsume
                     } else {
                         Log.i(TAG, "onInterceptTouchEvent: 不需要继续处理")
                         if (actionMasked == MotionEvent.ACTION_UP || actionMasked == MotionEvent.ACTION_CANCEL) {
@@ -251,7 +254,7 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback) :
             } else {
                 _needHandleTouch = false
             }
-            return super.onDown(e)
+            return false
         }
 
         override fun onScroll(

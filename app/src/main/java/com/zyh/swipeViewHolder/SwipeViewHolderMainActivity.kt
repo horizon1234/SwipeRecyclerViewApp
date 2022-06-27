@@ -66,7 +66,7 @@ class SwipeViewHolderMainActivity : AppCompatActivity() {
         ): Int {
             val position = viewHolder.adapterPosition
             return if (position % 2 == 0){
-                ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+                ItemTouchHelper.LEFT
             }else{
                 FLAG_NONE
             }
