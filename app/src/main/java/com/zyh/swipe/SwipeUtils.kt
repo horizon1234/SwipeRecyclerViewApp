@@ -4,8 +4,12 @@ import android.util.Log
 import android.view.ViewGroup
 import androidx.core.math.MathUtils
 import androidx.recyclerview.widget.RecyclerView
-import com.zyh.swipe.SwipeMenuHelper.Companion.SWIPE_MENU_TYPE_DEFAULT
-import com.zyh.swipe.SwipeMenuHelper.Companion.SWIPE_MENU_TYPE_FLOWING
+import com.zyh.swipeViewHolder.SwipeMenuHelper.Companion.SWIPE_MENU_TYPE_DEFAULT
+import com.zyh.swipeViewHolder.SwipeMenuHelper.Companion.SWIPE_MENU_TYPE_FLOWING
+import com.zyh.swipeViewHolder.forEach
+import com.zyh.swipeViewHolder.getChildOrNull
+import com.zyh.swipeViewHolder.mH
+import com.zyh.swipeViewHolder.mW
 
 //侧滑菜单相关的
 object SwipeUtils {

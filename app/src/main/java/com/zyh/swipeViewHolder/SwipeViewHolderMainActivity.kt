@@ -1,61 +1,60 @@
-package com.zyh.swipe
+package com.zyh.swipeViewHolder
 
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.Gravity
-import android.view.View
-import android.view.ViewGroup
 import android.widget.*
 import androidx.annotation.RequiresApi
-import androidx.core.view.setPadding
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chad.library.adapter.base.BaseQuickAdapter
-import com.chad.library.adapter.base.listener.OnItemChildClickListener
-import com.chad.library.adapter.base.listener.OnItemClickListener
 import com.chad.library.adapter.base.viewholder.BaseViewHolder
+import com.zyh.swipe.R
+import com.zyh.swipe.SwipeUtils
 
-class MainActivity : AppCompatActivity() {
+/**
+ * 侧滑菜单在ViewHolder中实现方式
+ * */
+class SwipeViewHolderMainActivity : AppCompatActivity() {
 
     private var mRecyclerView: RecyclerView? = null
 
     private var mSwipeMenuHelper: SwipeMenuHelper? = null
 
+    private var adapter: BaseQuickAdapter<String,BaseViewHolder>? = null
+
     companion object{
-        const val TAG = "MainActivity"
+        const val TAG = "SwipeViewHolderMain"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        initRecyclerView()
+        //设置侧滑
+        val mySwipeMenuCallback = MySwipeMenuCallback()
+        mSwipeMenuHelper = SwipeMenuHelper.install(mRecyclerView, mySwipeMenuCallback)
+    }
 
+    private fun initRecyclerView(){
         mRecyclerView = findViewById(R.id.recyclerView)
         mRecyclerView?.layoutManager = LinearLayoutManager(this)
-
-        val adapter = DemoAdapter(R.layout.layout_item)
-
-        adapter.addChildClickViewIds(R.id.bg)
-        adapter.setOnItemChildClickListener { adapter, view, position ->
+        adapter = DemoAdapter(R.layout.layout_item)
+        adapter?.addChildClickViewIds(R.id.bg)
+        adapter?.setOnItemChildClickListener { _, view, position ->
             if (view.id == R.id.bg) {
+                //点击先关闭侧滑菜单
                 mSwipeMenuHelper?.closeSwipeByPosition(position)
             }
         }
-
         mRecyclerView?.adapter = adapter
-
         val list = ArrayList<String>()
         for (i in 0..100) {
             list.add("Index ---- $i")
         }
-
-        adapter.setNewInstance(list)
-
-        //设置侧滑
-        val mySwipeMenuCallback = MySwipeMenuCallback()
-        mSwipeMenuHelper = SwipeMenuHelper.install(mRecyclerView, mySwipeMenuCallback)
+        adapter?.setNewInstance(list)
     }
 
     //自定义侧滑Callback
@@ -67,7 +66,7 @@ class MainActivity : AppCompatActivity() {
         ): Int {
             val position = viewHolder.adapterPosition
             return if (position % 2 == 0){
-                ItemTouchHelper.LEFT
+                ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
             }else{
                 FLAG_NONE
             }
@@ -91,11 +90,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    //Adapter
-    inner class DemoAdapter(val resId: Int) : BaseQuickAdapter<String,BaseViewHolder>(resId){
+    //Adapter，因为这种侧滑菜单在ViewHolder中，我们按需加载侧滑菜单
+    inner class DemoAdapter(private val resId: Int) : BaseQuickAdapter<String,BaseViewHolder>(resId){
         @RequiresApi(Build.VERSION_CODES.M)
         override fun convert(holder: BaseViewHolder, item: String) {
             holder.setText(R.id.indexTv, item)
+            //区分颜色
             if (holder.adapterPosition % 2 == 0) {
                 holder.setBackgroundColor(R.id.bg, resources.getColor(R.color.teal_200))
             } else {
@@ -103,21 +103,21 @@ class MainActivity : AppCompatActivity() {
             }
             when (holder.adapterPosition % 4) {
                 0 -> {
-                    holder.setText(R.id.testTv,"删除+签收")
                     //2个按钮
-                    val deleteSwipe = SwipeBtn(this@MainActivity).apply {
+                    holder.setText(R.id.testTv,"删除+签收")
+                    val deleteSwipe = SwipeBtn(this@SwipeViewHolderMainActivity).apply {
                         text = "删除"
                         setOnClickListener {
-                            Toast.makeText(this@MainActivity, "删除", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@SwipeViewHolderMainActivity, "删除", Toast.LENGTH_SHORT).show()
                         }
                         setTextColor(getColor(R.color.white))
                         setBackgroundColor(getColor(R.color.red))
                         setPadding(100,0,100,0)
                     }
-                    val signSwipe = SwipeBtn(this@MainActivity).apply {
+                    val signSwipe = SwipeBtn(this@SwipeViewHolderMainActivity).apply {
                         text = "签收"
                         setOnClickListener {
-                            Toast.makeText(this@MainActivity, "签收", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@SwipeViewHolderMainActivity, "签收", Toast.LENGTH_SHORT).show()
                         }
                         setTextColor(getColor(R.color.purple_700))
                         setBackgroundColor(getColor(R.color.white))
@@ -128,12 +128,12 @@ class MainActivity : AppCompatActivity() {
                         .addViews(arrayListOf(deleteSwipe, signSwipe))
                 }
                 2 -> {
-                    holder.setText(R.id.testTv,"详情")
                     //1个按钮
-                    val detailSwipe = SwipeBtn(this@MainActivity).apply {
+                    holder.setText(R.id.testTv,"详情")
+                    val detailSwipe = SwipeBtn(this@SwipeViewHolderMainActivity).apply {
                         text = "详情"
                         setOnClickListener {
-                            Toast.makeText(this@MainActivity, "详情", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@SwipeViewHolderMainActivity, "详情", Toast.LENGTH_SHORT).show()
                         }
                         setTextColor(getColor(R.color.white))
                         setBackgroundColor(getColor(R.color.red))

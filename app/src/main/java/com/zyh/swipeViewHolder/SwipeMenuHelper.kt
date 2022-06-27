@@ -1,4 +1,4 @@
-package com.zyh.swipe
+package com.zyh.swipeViewHolder
 
 import android.animation.ValueAnimator
 import android.util.Log
@@ -10,10 +10,10 @@ import androidx.core.math.MathUtils
 import androidx.core.view.GestureDetectorCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.zyh.swipe.SwipeMenuCallback.Companion.DOWN
-import com.zyh.swipe.SwipeMenuCallback.Companion.LEFT
-import com.zyh.swipe.SwipeMenuCallback.Companion.RIGHT
-import com.zyh.swipe.SwipeMenuCallback.Companion.UP
+import com.zyh.swipeViewHolder.SwipeMenuCallback.Companion.DOWN
+import com.zyh.swipeViewHolder.SwipeMenuCallback.Companion.LEFT
+import com.zyh.swipeViewHolder.SwipeMenuCallback.Companion.RIGHT
+import com.zyh.swipeViewHolder.SwipeMenuCallback.Companion.UP
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 
@@ -68,7 +68,7 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback) :
                     gestureDetectorCompat?.onTouchEvent(e)
                 }
                 else -> {
-                    Log.i(TAG, "onInterceptTouchEvent: 是否拦截 $e")
+                    Log.i(TAG, "onInterceptTouchEvent: $e")
                     if (_needHandleTouch) {
                         Log.i(TAG, "onInterceptTouchEvent: 需要继续处理")
                         gestureDetectorCompat?.onTouchEvent(e)

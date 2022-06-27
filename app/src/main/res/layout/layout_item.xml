@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     >
 
-    <com.zyh.swipe.SwipeBtnContainer
+    <com.zyh.swipeViewHolder.SwipeBtnContainer
         android:id="@+id/swipeContainer"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
@@ -15,7 +15,7 @@
         android:gravity="center_vertical"
         >
 
-    </com.zyh.swipe.SwipeBtnContainer>
+    </com.zyh.swipeViewHolder.SwipeBtnContainer>
 
     <LinearLayout
         android:id="@+id/bg"
