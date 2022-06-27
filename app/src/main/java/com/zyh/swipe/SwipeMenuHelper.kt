@@ -1,6 +1,7 @@
 package com.zyh.swipe
 
 import android.animation.ValueAnimator
+import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
@@ -9,20 +10,27 @@ import androidx.core.math.MathUtils
 import androidx.core.view.GestureDetectorCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.zyh.swipe.SwipeMenuCallback.Companion.DOWN
+import com.zyh.swipe.SwipeMenuCallback.Companion.LEFT
+import com.zyh.swipe.SwipeMenuCallback.Companion.RIGHT
+import com.zyh.swipe.SwipeMenuCallback.Companion.UP
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 
-class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback):
-    RecyclerView.OnChildAttachStateChangeListener{
+class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback) :
+    RecyclerView.OnChildAttachStateChangeListener {
 
-    var _recyclerView: RecyclerView? = null
+    private var _recyclerView: RecyclerView? = null
+
     /**当前打开的菜单ViewHolder*/
     var _swipeMenuViewHolder: RecyclerView.ViewHolder? = null
 
     //按下的ViewHolder
     var _downViewHolder: RecyclerView.ViewHolder? = null
+
     //是否需要处理事件
     var _needHandleTouch = true
+
     //当前正在进行左右滑or上下滑
     var _swipeFlags: Int = 0
 
@@ -55,14 +63,19 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback):
         override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
             return when (val actionMasked = e.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
+                    Log.i(TAG, "onInterceptTouchEvent: ACTION_DOWN事件")
                     _resetScrollValue()
                     gestureDetectorCompat?.onTouchEvent(e)
                 }
                 else -> {
+                    Log.i(TAG, "onInterceptTouchEvent: 是否拦截 $e")
                     if (_needHandleTouch) {
+                        Log.i(TAG, "onInterceptTouchEvent: 需要继续处理")
                         gestureDetectorCompat?.onTouchEvent(e)
                     } else {
+                        Log.i(TAG, "onInterceptTouchEvent: 不需要继续处理")
                         if (actionMasked == MotionEvent.ACTION_UP || actionMasked == MotionEvent.ACTION_CANCEL) {
+                            Log.i(TAG, "onInterceptTouchEvent: 处理UP事件")
                             touchFinish()
                         }
                         false
@@ -91,16 +104,18 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback):
 
                     //左右滑动菜单
                     val swipeMaxWidth =
-                        swipeMenuCallback.getSwipeMaxWidth(recyclerView, downViewHolder)
+                        swipeMenuCallback.getSwipeMenuMaxWidth(recyclerView, downViewHolder)
                             .toFloat()
 
                     val swipeMaxHeight =
-                        swipeMenuCallback.getSwipeMaxHeight(recyclerView, downViewHolder)
+                        swipeMenuCallback.getSwipeMenuMaxHeight(recyclerView, downViewHolder)
                             .toFloat()
 
                     //宽度阈值
                     val swipeWidthThreshold = swipeMaxWidth * swipeThreshold
                     val swipeHeightThreshold = swipeMaxHeight * swipeThreshold
+
+                    Log.i(TAG, "touchFinish: 侧滑菜单宽度 $swipeMaxWidth  宽度阈值$swipeWidthThreshold")
 
                     //速率阈值
                     val swipeVelocityXThreshold = swipeMenuCallback.getSwipeVelocityThreshold(
@@ -116,21 +131,25 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback):
 
                     if (_swipeFlags == SwipeMenuCallback.FLAG_HORIZONTAL) {
                         if (_lastVelocityX != 0f && _lastVelocityX.absoluteValue >= swipeVelocityXThreshold) {
-                            //fling
-                            if (_scrollX < 0 && _lastVelocityX < 0 && swipeFlag.have(ItemTouchHelper.LEFT)) {
-                                //向左快速fling
+                            Log.i(TAG, "touchFinish: 左右最后是Fling状态")
+                            if (_scrollX < 0 && _lastVelocityX < 0 && swipeFlag.have(LEFT)) {
+                                Log.i(TAG, "touchFinish: 向左快速Fling")
                                 scrollSwipeMenuTo(downViewHolder, -swipeMaxWidth, 0f)
                             } else if (_scrollX > 0 &&
                                 _lastVelocityX > 0 &&
-                                swipeFlag.have(ItemTouchHelper.RIGHT)
+                                swipeFlag.have(RIGHT)
                             ) {
+                                Log.i(TAG, "touchFinish: 向右快速Fling")
                                 scrollSwipeMenuTo(downViewHolder, swipeMaxWidth, 0f)
                             } else {
+                                Log.i(TAG, "touchFinish: 关闭")
                                 closeSwipeMenu(downViewHolder)
                             }
                         } else {
-                            //scroll
+                            Log.i(TAG, "touchFinish: 左右最后是Scroll")
                             if (_scrollX < 0) {
+                                Log.i(TAG, "touchFinish: ViewHolder已经左滑 _scrollX = $_scrollX _lastDistance = $_lastDistanceX")
+                                Log.i(TAG, "touchFinish: ViewHolder已经左滑 阈值是$swipeWidthThreshold  反向阈值是${swipeWidthThreshold - swipeMaxWidth}")
                                 if ((_lastDistanceX > 0 && _scrollX.absoluteValue >= swipeWidthThreshold) ||
                                     (_lastDistanceX < 0 && (swipeMaxWidth + _scrollX) < swipeWidthThreshold)
                                 ) {
@@ -156,12 +175,12 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback):
                         //上下滑动菜单
                         if (_lastVelocityY != 0f && _lastVelocityY.absoluteValue >= swipeVelocityYThreshold) {
                             //fling
-                            if (_scrollY < 0 && _lastVelocityY < 0 && swipeFlag.have(ItemTouchHelper.DOWN)) {
+                            if (_scrollY < 0 && _lastVelocityY < 0 && swipeFlag.have(DOWN)) {
                                 //向下快速fling
                                 scrollSwipeMenuTo(downViewHolder, 0f, swipeMaxHeight)
                             } else if (_scrollY > 0 &&
                                 _lastVelocityY > 0 &&
-                                swipeFlag.have(ItemTouchHelper.UP)
+                                swipeFlag.have(UP)
                             ) {
                                 scrollSwipeMenuTo(downViewHolder, 0f, -swipeMaxHeight)
                             } else {
@@ -202,39 +221,27 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback):
         }
     }
 
-    val itemTouchHelperGestureListener = object : GestureDetector.SimpleOnGestureListener() {
+    private val itemTouchHelperGestureListener = object : GestureDetector.SimpleOnGestureListener() {
 
         override fun onDown(e: MotionEvent?): Boolean {
+            Log.i(TAG, "onDown: 触摸到屏幕，开始处理")
             if (e != null) {
                 val findSwipedView = findSwipedView(e)
                 if (findSwipedView == null) {
-                    //没有点击到RecyclerView上
+                    Log.i(TAG, "onDown: 没有点击到ViewHolder上")
                     _needHandleTouch = false
                     closeSwipeMenu(_swipeMenuViewHolder)
                 } else {
                     findSwipedView.apply {
-//                        _recyclerView?.adapter?.let {
-//                            if (it is DslAdapter) {
-//                                it[adapterPosition, true, false]?.apply {
-//                                    if (_itemSwipeMenuHelper != this@SwipeMenuHelper) {
-//                                        _itemSwipeMenuHelper = this@SwipeMenuHelper
-//                                    }
-//                                }
-//                            }
-//                        }
-
                         if (_lastValueAnimator?.isRunning == true ||
                             (_downViewHolder != null && _downViewHolder != this)
                         ) {
-                            //快速按下其他item
+                            Log.i(TAG, "onDown: 动画还没有完成")
                             _needHandleTouch = false
-                            //closeSwipeMenu(_downViewHolder)
                         } else {
                             _downViewHolder = this
-                            //L.i("down:${this.adapterPosition}")
-
                             if (_swipeMenuViewHolder != null && _downViewHolder != _swipeMenuViewHolder) {
-                                //其他有ViewHolder被swipe，然后点击就是收起
+                                Log.i(TAG, "onDown: 收起其他已展开的ViewHolder")
                                 _needHandleTouch = false
                                 closeSwipeMenu(_swipeMenuViewHolder)
                             }
@@ -253,15 +260,10 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback):
             distanceX: Float,
             distanceY: Float
         ): Boolean {
-            //L.i("distanceX:$distanceX distanceY:$distanceY")
-
+            Log.i(TAG, "onScroll: $e1  $e2  $distanceX  $distanceY")
             val absDx: Float = abs(distanceX)
             val absDy: Float = abs(distanceY)
-
             if (absDx >= _slop || absDy >= _slop) {
-//                _dragCallbackHelper?._shouldReactToLongPress = false
-//                _cancelDragHelper(e1)
-
                 if (absDx > absDy) {
                     _lastDistanceX = distanceX
                 } else {
@@ -278,8 +280,9 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback):
             if (recyclerView != null && downViewHolder != null) {
                 val swipeFlag =
                     swipeMenuCallback.getMovementFlags(recyclerView, downViewHolder)
+                Log.i(TAG, "onScroll: 被按下ViewHolder的swipeFlag = $swipeFlag")
                 if (swipeFlag <= 0) {
-                    //当前item, 关闭了swipe
+                    Log.i(TAG, "onScroll: 不需要继续处理")
                     _needHandleTouch = false
                 } else {
                     //本次滑动的意图方向
@@ -288,44 +291,46 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback):
                     } else {
                         ItemTouchHelper.UP or ItemTouchHelper.DOWN
                     }
-
+                    Log.i(TAG, "onScroll: 本次意图的方向 $flag")
                     if (_swipeFlags == 0) {
                         _swipeFlags = flag
                     }
-
                     val swipeMaxWidth =
-                        swipeMenuCallback.getSwipeMaxWidth(recyclerView, downViewHolder)
+                        swipeMenuCallback.getSwipeMenuMaxWidth(recyclerView, downViewHolder)
                             .toFloat()
                     val swipeMaxHeight =
-                        swipeMenuCallback.getSwipeMaxHeight(recyclerView, downViewHolder)
+                        swipeMenuCallback.getSwipeMenuMaxHeight(recyclerView, downViewHolder)
                             .toFloat()
 
                     _scrollX -= distanceX
                     _scrollX = MathUtils.clamp(_scrollX, -swipeMaxWidth, swipeMaxWidth)
                     _scrollY -= distanceY
                     _scrollY = MathUtils.clamp(_scrollY, -swipeMaxHeight, swipeMaxHeight)
-
+                    Log.i(TAG, "onScroll: _scrollX = $_scrollX  _scrollY = $_scrollY")
                     if (_swipeFlags == SwipeMenuCallback.FLAG_HORIZONTAL) {
+                        Log.i(TAG, "onScroll: 本次滑动是左右")
                         if (swipeFlag.have(ItemTouchHelper.LEFT) ||
                             swipeFlag.have(ItemTouchHelper.RIGHT)
                         ) {
                             _scrollY = 0f
                             if (_scrollX < 0 && swipeFlag and ItemTouchHelper.LEFT == 0) {
-                                //不具备向左滑动
+                                Log.i(TAG, "onScroll: 手势左滑，但是不具备左侧滑")
                                 _scrollX = 0f
                             } else if (_scrollX > 0 && swipeFlag and ItemTouchHelper.RIGHT == 0) {
-                                //不具备向右滑动
+                                Log.i(TAG, "onScroll: 手势右滑，但是不具备右滑")
                                 _scrollX = 0f
                             } else {
                                 _recyclerView?.parent?.requestDisallowInterceptTouchEvent(true)
                             }
                         } else {
+                            Log.i(TAG, "onScroll: 手势左右滑动，但是该viewHolder不具备")
                             _swipeFlags = 0
                             _needHandleTouch = false
                             _scrollX = 0f
                             if (_swipeMenuViewHolder == _downViewHolder) {
                                 //已经打开了按下的菜单, 但是菜单缺没有此方向的滑动flag
                                 //则关闭菜单
+                                Log.i(TAG, "onScroll: 左右滑动 flag是上下的")
                                 closeSwipeMenu(_swipeMenuViewHolder)
                                 return _needHandleTouch
                             } else {
@@ -333,6 +338,7 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback):
                             }
                         }
                     } else {
+                        Log.i(TAG, "onScroll: 本次手势滑动是上下方向")
                         if (swipeFlag.have(ItemTouchHelper.UP) || swipeFlag.have(ItemTouchHelper.DOWN)) {
                             _scrollX = 0f
                             if (_scrollY < 0 && swipeFlag and ItemTouchHelper.DOWN == 0) {
@@ -345,12 +351,14 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback):
                                 _recyclerView?.parent?.requestDisallowInterceptTouchEvent(true)
                             }
                         } else {
+                            Log.i(TAG, "onScroll: 手势上下，但是没有对应swipeFlag，白搭")
                             _swipeFlags = 0
                             _needHandleTouch = false
                             _scrollY = 0f
                             if (_swipeMenuViewHolder == _downViewHolder) {
                                 //已经打开了按下的菜单, 但是菜单缺没有此方向的滑动flag
                                 //则关闭菜单
+                                Log.i(TAG, "onScroll: 手势上下，flag是左右的")
                                 closeSwipeMenu(_swipeMenuViewHolder)
                                 return _needHandleTouch
                             } else {
@@ -384,11 +392,14 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback):
             _lastVelocityY = velocityY
             return super.onFling(e1, e2, velocityX, velocityY)
         }
+
     }
 
     var gestureDetectorCompat: GestureDetectorCompat? = null
 
-    companion object{
+    companion object {
+
+        const val TAG = "SwipeMenuHelper"
 
         /**滑动菜单滑动方式, 默认. 固定在底部*/
         const val SWIPE_MENU_TYPE_DEFAULT = 0x1
@@ -402,6 +413,20 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback):
             slideMenuHelper.attachToRecyclerView(recyclerView)
             return slideMenuHelper
         }
+
+        fun install(
+            recyclerView: RecyclerView?,
+            swipeMenuCallback: SwipeMenuCallback
+        ): SwipeMenuHelper {
+            val slideMenuHelper = SwipeMenuHelper(swipeMenuCallback)
+            slideMenuHelper.attachToRecyclerView(recyclerView)
+            return slideMenuHelper
+        }
+    }
+
+    fun closeSwipeByPosition(position: Int){
+        val viewHolder = _recyclerView?.findViewHolderForAdapterPosition(position)
+        closeSwipeMenu(viewHolder)
     }
 
     fun attachToRecyclerView(recyclerView: RecyclerView?) {
@@ -517,7 +542,7 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback):
     override fun onChildViewAttachedToWindow(view: View) {
         _recyclerView?.apply {
             getChildViewHolder(view)?.let { block ->
-                swipeMenuCallback.onSwipeTo(_recyclerView!!, block,0F,0F)
+                swipeMenuCallback.onSwipeTo(_recyclerView!!, block, 0F, 0F)
             }
         }
     }
@@ -525,7 +550,7 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback):
     override fun onChildViewDetachedFromWindow(view: View) {
         _recyclerView?.apply {
             getChildViewHolder(view)?.apply {
-                if (this == _swipeMenuViewHolder){
+                if (this == _swipeMenuViewHolder) {
                     _resetScrollValue()
                     _scrollX = 0f
                     _scrollY = 0f

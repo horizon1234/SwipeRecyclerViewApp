@@ -1,12 +1,16 @@
 package com.zyh.swipe
 
+import android.util.Log
 import android.view.ViewGroup
 import androidx.core.math.MathUtils
 import androidx.recyclerview.widget.RecyclerView
+import com.zyh.swipe.SwipeMenuHelper.Companion.SWIPE_MENU_TYPE_DEFAULT
 import com.zyh.swipe.SwipeMenuHelper.Companion.SWIPE_MENU_TYPE_FLOWING
 
 //侧滑菜单相关的
 object SwipeUtils {
+
+    const val TAG = "SwipeUtils"
 
     /**
      * 获取ViewHolder的侧滑菜单宽度，这里必须要求是
@@ -24,7 +28,8 @@ object SwipeUtils {
      * 默认的UI效果就是, TranslationX.
      * 默认实现暂时只支持左/右滑动的菜单, 上/下滑动菜单不支持
      * */
-    open fun onItemSwipeMenuTo(itemHolder: RecyclerView.ViewHolder, dX: Float, dY: Float,itemSwipeMenuType: Int = SWIPE_MENU_TYPE_FLOWING) {
+    open fun onItemSwipeMenuTo(itemHolder: RecyclerView.ViewHolder, dX: Float, dY: Float,itemSwipeMenuType: Int = SWIPE_MENU_TYPE_DEFAULT) {
+        Log.i(TAG, "onItemSwipeMenuTo: dX = $dX dY = $dY" )
         val parent = itemHolder.itemView
         if (parent is ViewGroup && parent.childCount > 1) {
             //菜单最大的宽度, 用于限制滑动的边界
@@ -48,6 +53,19 @@ object SwipeUtils {
                 } else {
                     child.translationX = tX
                 }
+            }
+        }
+    }
+
+    open fun onItemSwipeTo(itemHolder: RecyclerView.ViewHolder, dX: Float, dY: Float) {
+        Log.i(TAG, "onItemSwipeTo: dX = $dX dY = $dY" )
+        val parent = itemHolder.itemView
+        if (parent is ViewGroup && parent.childCount > 0) {
+            //菜单最大的宽度, 用于限制滑动的边界
+            val menuWidth = getSwipeMenuWidth(itemHolder)
+            val tX = MathUtils.clamp(dX, -menuWidth.toFloat(), menuWidth.toFloat())
+            parent.forEach { index, child ->
+                child.translationX = dX
             }
         }
     }
