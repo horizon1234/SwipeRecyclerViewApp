@@ -85,3 +85,7 @@ fun ViewGroup.eachChild(recursively: Boolean = false, map: (index: Int, child: V
         }
     }
 }
+
+fun Context.dip2px(dip: Float): Float{
+    return this.resources.displayMetrics.density * dip + 0.5F
+}

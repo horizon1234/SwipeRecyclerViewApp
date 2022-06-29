@@ -1,9 +1,11 @@
 package com.zyh.itemDecoration
 
+import android.content.Context
 import androidx.recyclerview.widget.RecyclerView
 import com.zyh.swipe.SwipeUtils
+import com.zyh.swipeViewHolder.dip2px
 
-open class ItemDecorationSwipeMenuCallback {
+open class ItemDecorationSwipeMenuCallback(private val context: Context) {
 
     companion object {
         //上
@@ -25,7 +27,10 @@ open class ItemDecorationSwipeMenuCallback {
         const val FLAG_VERTICAL = DOWN or UP
         //水平方向
         const val FLAG_HORIZONTAL = LEFT or RIGHT
+
     }
+
+    var width = context.dip2px(60F).toInt()
 
     open fun getMovementFlags(
         recyclerView: RecyclerView,
@@ -47,7 +52,8 @@ open class ItemDecorationSwipeMenuCallback {
         recyclerView: RecyclerView,
         viewHolder: RecyclerView.ViewHolder
     ): Int {
-        return SwipeUtils.getSwipeMenuWidth(viewHolder)
+        return getSwipeButtons(recyclerView,viewHolder)?.size?.times(width)
+            ?: 0
     }
 
     open fun getSwipeMenuMaxHeight(
@@ -72,6 +78,13 @@ open class ItemDecorationSwipeMenuCallback {
         y: Float
     ) {
         SwipeUtils.onItemSwipeMenuTo(viewHolder, x, y)
+    }
+
+    open fun getSwipeButtons(
+        recyclerView: RecyclerView,
+        viewHolder: RecyclerView.ViewHolder
+    ): List<SwipeButton>?{
+        return null
     }
 
 }

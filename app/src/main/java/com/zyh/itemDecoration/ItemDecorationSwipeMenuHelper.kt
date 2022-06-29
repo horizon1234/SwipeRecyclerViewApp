@@ -1,6 +1,8 @@
 package com.zyh.itemDecoration
 
 import android.animation.ValueAnimator
+import android.graphics.Canvas
+import android.graphics.RectF
 import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -21,7 +23,7 @@ import kotlin.math.abs
 import kotlin.math.absoluteValue
 
 class ItemDecorationSwipeMenuHelper(var itemDecorationSwipeMenuCallback: ItemDecorationSwipeMenuCallback) :
-    RecyclerView.OnChildAttachStateChangeListener {
+    RecyclerView.OnChildAttachStateChangeListener , RecyclerView.ItemDecoration(){
 
     private var _recyclerView: RecyclerView? = null
 
@@ -379,6 +381,9 @@ class ItemDecorationSwipeMenuHelper(var itemDecorationSwipeMenuCallback: ItemDec
                         _scrollX,
                         _scrollY
                     )
+                    
+                    //刷新recyclerView
+                    _recyclerView?.invalidate()
                 }
             } else {
                 _needHandleTouch = false
@@ -413,13 +418,6 @@ class ItemDecorationSwipeMenuHelper(var itemDecorationSwipeMenuCallback: ItemDec
         /**滑动菜单滑动方式, 跟随在内容后面*/
         const val SWIPE_MENU_TYPE_FLOWING = 0x2
 
-        /**安装*/
-        fun install(recyclerView: RecyclerView?): ItemDecorationSwipeMenuHelper {
-            val slideMenuHelper = ItemDecorationSwipeMenuHelper(ItemDecorationSwipeMenuCallback())
-            slideMenuHelper.attachToRecyclerView(recyclerView)
-            return slideMenuHelper
-        }
-
         fun install(
             recyclerView: RecyclerView?,
             swipeMenuCallback: ItemDecorationSwipeMenuCallback
@@ -427,6 +425,36 @@ class ItemDecorationSwipeMenuHelper(var itemDecorationSwipeMenuCallback: ItemDec
             val slideMenuHelper = ItemDecorationSwipeMenuHelper(swipeMenuCallback)
             slideMenuHelper.attachToRecyclerView(recyclerView)
             return slideMenuHelper
+        }
+    }
+
+    /**
+     * 利用该函数来实现绘制侧滑菜单
+     * */
+    override fun onDraw(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
+        //从swipeCallback绘制
+        Log.i(TAG, "onDraw: 绘制ItemDecoration")
+        Log.i(TAG, "onDraw: _scrollX = $_scrollX")
+        val viewHolder = if (_downViewHolder != null) _downViewHolder else _swipeMenuViewHolder
+        Log.i(TAG, "onDraw: position = ${viewHolder?.absoluteAdapterPosition}")
+        val position = viewHolder?.absoluteAdapterPosition
+        position?.let {
+            //获取该position的SwipeButton
+            val swipeButtons = itemDecorationSwipeMenuCallback.getSwipeButtons(_recyclerView!!,viewHolder)
+            //绘制
+            val swipeButtonWidth = itemDecorationSwipeMenuCallback.width
+            val itemView = viewHolder.itemView
+            if (_scrollX < 0){
+                //绘制右侧侧滑菜单
+                //获取ViewHolder右侧坐标
+                var right = itemView.right.toFloat()
+                Log.i(TAG, "onDraw: right = $right")
+                //绘制每个按钮
+                for (rightBtn in swipeButtons!!){
+                    val left = right + _scrollX
+                    rightBtn.onDraw(c, RectF(left,itemView.top.toFloat(),right,itemView.bottom.toFloat()),it)
+                }
+            }
         }
     }
 
@@ -452,7 +480,7 @@ class ItemDecorationSwipeMenuHelper(var itemDecorationSwipeMenuCallback: ItemDec
         _recyclerView?.apply {
             val vc = ViewConfiguration.get(context)
             _slop = vc.scaledTouchSlop
-//            addItemDecoration(this@SwipeMenuHelper)
+            addItemDecoration(this@ItemDecorationSwipeMenuHelper)
             addOnItemTouchListener(mOnItemTouchListener)
             addOnChildAttachStateChangeListener(this@ItemDecorationSwipeMenuHelper)
             startGestureDetection()
@@ -526,6 +554,8 @@ class ItemDecorationSwipeMenuHelper(var itemDecorationSwipeMenuCallback: ItemDec
                 _scrollY = currentY
 
                 itemDecorationSwipeMenuCallback.onSwipeTo(_recyclerView!!, viewHolder, currentX, currentY)
+                //刷新recyclerView
+                _recyclerView?.invalidate()
             }
             valueAnimator.addListener(onEnd = {
                 if (x == 0f && y == 0f) {

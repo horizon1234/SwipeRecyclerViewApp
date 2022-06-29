@@ -1,5 +1,7 @@
 package com.zyh.itemDecoration
 
+import android.app.Application
+import android.content.Context
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -11,6 +13,7 @@ import com.chad.library.adapter.base.BaseQuickAdapter
 import com.chad.library.adapter.base.viewholder.BaseViewHolder
 import com.zyh.swipe.R
 import com.zyh.swipe.SwipeUtils
+import com.zyh.swipeViewHolder.dip2px
 
 /**
  * 使用ItemDecoration实现侧滑菜单
@@ -30,7 +33,7 @@ class ItemDecorationSwipeMenuActivity : AppCompatActivity() {
         initRecyclerView()
 
         //设置侧滑
-        val mySwipeMenuCallback = MySwipeMenuCallback()
+        val mySwipeMenuCallback = MySwipeMenuCallback(this)
         mSwipeMenuHelper = ItemDecorationSwipeMenuHelper.install(mRecyclerView, mySwipeMenuCallback)
     }
 
@@ -66,7 +69,7 @@ class ItemDecorationSwipeMenuActivity : AppCompatActivity() {
     }
 
     //自定义侧滑Callback
-    class MySwipeMenuCallback : ItemDecorationSwipeMenuCallback() {
+    class MySwipeMenuCallback(context: Context) : ItemDecorationSwipeMenuCallback(context) {
 
         override fun getMovementFlags(
             recyclerView: RecyclerView,
@@ -80,13 +83,6 @@ class ItemDecorationSwipeMenuActivity : AppCompatActivity() {
             }
         }
 
-        override fun getSwipeMenuMaxWidth(
-            recyclerView: RecyclerView,
-            viewHolder: RecyclerView.ViewHolder
-        ): Int {
-            return 200
-        }
-
         override fun onSwipeTo(
             recyclerView: RecyclerView,
             viewHolder: RecyclerView.ViewHolder,
@@ -94,6 +90,15 @@ class ItemDecorationSwipeMenuActivity : AppCompatActivity() {
             y: Float
         ) {
             SwipeUtils.onItemSwipeTo(viewHolder, x, y)
+        }
+
+        override fun getSwipeButtons(
+            recyclerView: RecyclerView,
+            viewHolder: RecyclerView.ViewHolder
+        ): List<SwipeButton> {
+            return ArrayList<SwipeButton>().apply {
+                add(SwipeButton())
+            }
         }
     }
 }
